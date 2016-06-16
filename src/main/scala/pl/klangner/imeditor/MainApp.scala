@@ -135,7 +135,7 @@ object MainApp extends SimpleSwingApplication {
     if(imageList.nonEmpty){
       val csvFile = imageList(0).getParent + "/" + CSV_FILE_NAME
       val pw = new PrintWriter(new File(csvFile))
-      pw.println("image,plate,left,top,right,bottom,plate_text")
+      pw.println("image,left,top,right,bottom,plate_text")
       metadataList.foreach{ x =>
         pw.println("%s,%d,%d,%d,%d,%s".format(x._1, x._2.left, x._2.top, x._2.right, x._2.bottom, x._2.plateText))
       }
@@ -145,9 +145,9 @@ object MainApp extends SimpleSwingApplication {
 
   def imageClicked(pos: Point) : Unit = {
     if(leftTopField.hasFocus){
-      leftTopField.text = "%d, %d".format(pos.x, pos.y)
+      leftTopField.text = "%d, %d".format(pos.x/2, pos.y/2)
     } else if(rightBottomField.hasFocus){
-      rightBottomField.text = "%d, %d".format(pos.x, pos.y)
+      rightBottomField.text = "%d, %d".format(pos.x/2, pos.y/2)
     }
     updateMetadata()
   }
