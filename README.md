@@ -1,3 +1,3 @@
 # Image Metadata Editor
 
-Editor for editing metadata for images. Metadata is stored in csv file plates.csv
+Currently this editor is used to label license plates on images.

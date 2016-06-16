@@ -92,12 +92,15 @@ object MainApp extends SimpleSwingApplication {
       imageList.clear()
       imageList ++= dir.listFiles.filter(_.isFile).filter(imageFilter)
       metadataList.clear()
-      metadataList ++= Source.fromFile(dir.getAbsolutePath + "/plate.csv").getLines().drop(1).map{line =>
-        val tokens = line.split(",")
-        val meta = if(tokens.size >= 5){
-          ImageMetadata(safeInt(tokens(1)), safeInt(tokens(2)), safeInt(tokens(3)), safeInt(tokens(4)), "")
-        } else ImageMetadata(0, 0, 0, 0, "")
-        tokens(0) -> meta
+      val csvFile = new File(dir.getAbsolutePath + "/plate.csv")
+      if(csvFile.exists()) {
+        metadataList ++= Source.fromFile(csvFile).getLines().drop(1).map { line =>
+          val tokens = line.split(",")
+          val meta = if (tokens.size > 5) {
+            ImageMetadata(safeInt(tokens(1)), safeInt(tokens(2)), safeInt(tokens(3)), safeInt(tokens(4)), tokens(5))
+          } else ImageMetadata(0, 0, 0, 0, "")
+          tokens(0) -> meta
+        }
       }
       showImage(0)
     }
@@ -124,9 +127,9 @@ object MainApp extends SimpleSwingApplication {
     if(imageList.nonEmpty){
       val csvFile = imageList(0).getParent + "/plate.csv"
       val pw = new PrintWriter(new File(csvFile))
-      pw.println("image,plate,left,top,right,bottom")
+      pw.println("image,plate,left,top,right,bottom,plate_text")
       metadataList.foreach{ x =>
-        pw.println("%s,%d,%d,%d,%d".format(x._1, x._2.left, x._2.top, x._2.right, x._2.bottom))
+        pw.println("%s,%d,%d,%d,%d,%s".format(x._1, x._2.left, x._2.top, x._2.right, x._2.bottom, x._2.plateText))
       }
       pw.close()
     }
