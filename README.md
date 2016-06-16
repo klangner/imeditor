@@ -1,3 +1,3 @@
 # Image Metadata Editor
 
-Editor for editing metadata for images. Metadata is stored in separate file with name <image_name>.meta
+Editor for editing metadata for images. Metadata is stored in csv file plates.csv
