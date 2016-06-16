@@ -17,6 +17,8 @@ case class ImageMetadata(left: Int, top: Int, right: Int, bottom: Int, plateText
   */
 object MainApp extends SimpleSwingApplication {
 
+  val CSV_FILE_NAME = "plates.csv"
+
   val loadButton = new Button("Load")
   val saveButton = new Button("Save")
   val fileNameLabel = new Label("")
@@ -97,7 +99,7 @@ object MainApp extends SimpleSwingApplication {
       imageList.clear()
       imageList ++= dir.listFiles.filter(_.isFile).filter(imageFilter)
       metadataList.clear()
-      val csvFile = new File(dir.getAbsolutePath + "/plate.csv")
+      val csvFile = new File(dir.getAbsolutePath + "/" + CSV_FILE_NAME)
       if(csvFile.exists()) {
         metadataList ++= Source.fromFile(csvFile).getLines().drop(1).map { line =>
           val tokens = line.split(",")
@@ -131,7 +133,7 @@ object MainApp extends SimpleSwingApplication {
 
   def saveAction(): Unit = {
     if(imageList.nonEmpty){
-      val csvFile = imageList(0).getParent + "/plate.csv"
+      val csvFile = imageList(0).getParent + "/" + CSV_FILE_NAME
       val pw = new PrintWriter(new File(csvFile))
       pw.println("image,plate,left,top,right,bottom,plate_text")
       metadataList.foreach{ x =>
