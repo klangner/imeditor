@@ -1,9 +1,10 @@
 package pl.klangner.imeditor
 
-import java.io.File
+import java.io.{PrintWriter, File}
 import javax.swing.JFileChooser
 
 import scala.collection.mutable
+import scala.io.Source
 import scala.swing.BorderPanel.Position
 import scala.swing._
 import scala.swing.event.{ButtonClicked, EditDone, MouseClicked}
@@ -16,7 +17,8 @@ case class ImageMetadata(left: Int, top: Int, right: Int, bottom: Int, plateText
   */
 object MainApp extends SimpleSwingApplication {
 
-  val loadFolderButton = new Button("Load")
+  val loadButton = new Button("Load")
+  val saveButton = new Button("Save")
   val leftTopField = new TextField(10)
   val rightBottomField = new TextField(10)
   val plateTextField = new TextField(10)
@@ -36,7 +38,7 @@ object MainApp extends SimpleSwingApplication {
 
     contents = new BorderPanel {
 
-      add(new FlowPanel(FlowPanel.Alignment.Left)(loadFolderButton), Position.North)
+      add(new FlowPanel(FlowPanel.Alignment.Left)(loadButton, saveButton), Position.North)
       add(editorForm, Position.Center)
       add(new FlowPanel(prevButton, posLabel, nextButton), Position.South)
     }
@@ -52,11 +54,12 @@ object MainApp extends SimpleSwingApplication {
     add(new ScrollPane(imagePanel), Position.Center)
   }
 
-  listenTo(loadFolderButton,
+  listenTo(loadButton, saveButton,
     leftTopField, rightBottomField, plateTextField,
     prevButton, nextButton, imagePanel.mouse.clicks)
   reactions += {
-    case ButtonClicked(`loadFolderButton`) => openFolderAction()
+    case ButtonClicked(`loadButton`) => openFolderAction()
+    case ButtonClicked(`saveButton`) => saveAction()
     case EditDone(`leftTopField`) => updateMetadata()
     case EditDone(`rightBottomField`) => updateMetadata()
     case EditDone(`plateTextField`) => updateMetadata()
@@ -68,7 +71,7 @@ object MainApp extends SimpleSwingApplication {
   /** Open folder action. */
   def openFolderAction(): Unit = {
     selectFolder().foreach { path =>
-      loadImageList(path)
+      loadFolder(path)
     }
   }
 
@@ -84,11 +87,18 @@ object MainApp extends SimpleSwingApplication {
     else None
   }
 
-  def loadImageList(dir: File): Unit = {
+  def loadFolder(dir: File): Unit = {
     if (dir.isDirectory){
       imageList.clear()
       imageList ++= dir.listFiles.filter(_.isFile).filter(imageFilter)
       metadataList.clear()
+      metadataList ++= Source.fromFile(dir.getAbsolutePath + "/plate.csv").getLines().drop(1).map{line =>
+        val tokens = line.split(",")
+        val meta = if(tokens.size >= 5){
+          ImageMetadata(safeInt(tokens(1)), safeInt(tokens(2)), safeInt(tokens(3)), safeInt(tokens(4)), "")
+        } else ImageMetadata(0, 0, 0, 0, "")
+        tokens(0) -> meta
+      }
       showImage(0)
     }
   }
@@ -107,6 +117,18 @@ object MainApp extends SimpleSwingApplication {
       rightBottomField.text = "%d, %d".format(meta.right, meta.bottom)
       plateTextField.text = meta.plateText
       leftTopField.requestFocus()
+    }
+  }
+
+  def saveAction(): Unit = {
+    if(imageList.nonEmpty){
+      val csvFile = imageList(0).getParent + "/plate.csv"
+      val pw = new PrintWriter(new File(csvFile))
+      pw.println("image,plate,left,top,right,bottom")
+      metadataList.foreach{ x =>
+        pw.println("%s,%d,%d,%d,%d".format(x._1, x._2.left, x._2.top, x._2.right, x._2.bottom))
+      }
+      pw.close()
     }
   }
 
