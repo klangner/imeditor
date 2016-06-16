@@ -19,13 +19,16 @@ object MainApp extends SimpleSwingApplication {
 
   val loadButton = new Button("Load")
   val saveButton = new Button("Save")
+  val fileNameLabel = new Label("")
   val leftTopField = new TextField(10)
   val rightBottomField = new TextField(10)
   val plateTextField = new TextField(10)
   val imagePanel = new ImagePanel()
-  val prevButton = new Button("<--")
+  val firstButton = new Button("First")
+  val prevButton = new Button("Previous")
   val posLabel = new Label("0/0")
-  val nextButton = new Button("-->")
+  val nextButton = new Button("Next")
+  val nextUnlabelledButton = new Button("Next unlabelled")
 
   // State
   val imageList = mutable.ArrayBuffer[File]()
@@ -38,9 +41,9 @@ object MainApp extends SimpleSwingApplication {
 
     contents = new BorderPanel {
 
-      add(new FlowPanel(FlowPanel.Alignment.Left)(loadButton, saveButton), Position.North)
+      add(new FlowPanel(FlowPanel.Alignment.Left)(loadButton, saveButton, fileNameLabel), Position.North)
       add(editorForm, Position.Center)
-      add(new FlowPanel(prevButton, posLabel, nextButton), Position.South)
+      add(new FlowPanel(firstButton, prevButton, posLabel, nextButton, nextUnlabelledButton), Position.South)
     }
     centerOnScreen()
   }
@@ -56,15 +59,17 @@ object MainApp extends SimpleSwingApplication {
 
   listenTo(loadButton, saveButton,
     leftTopField, rightBottomField, plateTextField,
-    prevButton, nextButton, imagePanel.mouse.clicks)
+    firstButton, prevButton, nextButton, nextUnlabelledButton, imagePanel.mouse.clicks)
   reactions += {
     case ButtonClicked(`loadButton`) => openFolderAction()
     case ButtonClicked(`saveButton`) => saveAction()
     case EditDone(`leftTopField`) => updateMetadata()
     case EditDone(`rightBottomField`) => updateMetadata()
     case EditDone(`plateTextField`) => updateMetadata()
+    case ButtonClicked(`firstButton`) => showImage(0)
     case ButtonClicked(`prevButton`) => showImage(currentImageIndex-1)
     case ButtonClicked(`nextButton`) => showImage(currentImageIndex+1)
+    case ButtonClicked(`nextUnlabelledButton`) => showImage(findUnlabelledImage())
     case e: MouseClicked => imageClicked(e.point)
   }
 
@@ -112,6 +117,7 @@ object MainApp extends SimpleSwingApplication {
   def showImage(index: Int): Unit = {
     if(index < imageList.size && index >= 0){
       currentImageIndex = index
+      fileNameLabel.text = imageList(index).getName
       val meta = metadataList.getOrElse(imageList(index).getName, ImageMetadata(0, 0, 0, 0, ""))
       imagePanel.imagePath = imageList(index).getAbsolutePath
       imagePanel.setBoxPosition(meta.left, meta.top, meta.right, meta.bottom)
@@ -167,5 +173,20 @@ object MainApp extends SimpleSwingApplication {
     } catch {
       case e: NumberFormatException => 0
     }
+  }
+
+  /** Find first image without plate position */
+  def findUnlabelledImage() : Int = {
+    imageList.zipWithIndex
+      .map(x => (x._1.getName, x._2))
+      .filter(x => hasMetadata(x._1))
+      .map(_._2)
+      .headOption
+      .getOrElse(currentImageIndex)
+  }
+
+  def hasMetadata(image: String): Boolean = {
+    val im = metadataList.getOrElse(image, ImageMetadata(0, 0, 0, 0, ""))
+    im.left == 0 || im.top == 0 || im.right == 0 || im.bottom == 0
   }
 }
