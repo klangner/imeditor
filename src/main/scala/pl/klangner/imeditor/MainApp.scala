@@ -145,9 +145,9 @@ object MainApp extends SimpleSwingApplication {
 
   def imageClicked(pos: Point) : Unit = {
     if(leftTopField.hasFocus){
-      leftTopField.text = "%d, %d".format(pos.x/2, pos.y/2)
+      leftTopField.text = "%d, %d".format(pos.x, pos.y)
     } else if(rightBottomField.hasFocus){
-      rightBottomField.text = "%d, %d".format(pos.x/2, pos.y/2)
+      rightBottomField.text = "%d, %d".format(pos.x, pos.y)
     }
     updateMetadata()
   }

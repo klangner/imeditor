@@ -29,11 +29,11 @@ class ImagePanel extends Panel
   override def paintComponent(g:Graphics2D) = {
     super.paintComponent(g)
     if (null != bufferedImage) {
-      val w = 2 * bufferedImage.getWidth
-      val h = 2 * bufferedImage.getHeight
+      val w = bufferedImage.getWidth
+      val h = bufferedImage.getHeight
       g.drawImage(bufferedImage, 0, 0, w, h, null)
       g.setColor(Color.red)
-      g.drawRect(2*box._1, 2*box._2, 2*(box._3-box._1), 2*(box._4-box._2))
+      g.drawRect(box._1, box._2, (box._3-box._1), (box._4-box._2))
     }
   }
 }
