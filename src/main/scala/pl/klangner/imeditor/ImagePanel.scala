@@ -22,7 +22,14 @@ class ImagePanel extends Panel
   }
 
   def setBoxPosition(left: Int, top: Int, right: Int, bottom: Int): Unit = {
-    box = (left, top, right, bottom)
+    if(left < right) {
+      if (top < bottom) box = (left, top, right, bottom)
+      else box = (left, bottom, right, top)
+    } else {
+      if (top < bottom) box = (right, top, left, bottom)
+      else box = (right, bottom, left, top)
+
+    }
     repaint()
   }
 
@@ -33,7 +40,7 @@ class ImagePanel extends Panel
       val h = bufferedImage.getHeight
       g.drawImage(bufferedImage, 0, 0, w, h, null)
       g.setColor(Color.red)
-      g.drawRect(box._1, box._2, (box._3-box._1), (box._4-box._2))
+      g.drawRect(box._1, box._2, box._3-box._1, box._4-box._2)
     }
   }
 }

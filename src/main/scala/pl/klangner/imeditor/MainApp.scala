@@ -69,8 +69,12 @@ object MainApp extends SimpleSwingApplication {
     case EditDone(`rightBottomField`) => updateMetadata()
     case EditDone(`plateTextField`) => updateMetadata()
     case ButtonClicked(`firstButton`) => showImage(0)
-    case ButtonClicked(`prevButton`) => showImage(currentImageIndex-1)
-    case ButtonClicked(`nextButton`) => showImage(currentImageIndex+1)
+    case ButtonClicked(`prevButton`) =>
+      saveAction()
+      showImage(currentImageIndex-1)
+    case ButtonClicked(`nextButton`) =>
+      saveAction()
+      showImage(currentImageIndex+1)
     case ButtonClicked(`nextUnlabelledButton`) => showImage(findUnlabelledImage())
     case e: MouseClicked => imageClicked(e.point)
   }
@@ -103,10 +107,12 @@ object MainApp extends SimpleSwingApplication {
       if(csvFile.exists()) {
         metadataList ++= Source.fromFile(csvFile).getLines().drop(1).map { line =>
           val tokens = line.split(",")
-          val meta = if (tokens.size > 5) {
-            ImageMetadata(safeInt(tokens(1)), safeInt(tokens(2)), safeInt(tokens(3)), safeInt(tokens(4)), tokens(5))
-          } else ImageMetadata(0, 0, 0, 0, "")
-          tokens(0) -> meta
+          val left = if(tokens.size > 1) safeInt(tokens(1)) else 0
+          val top = if(tokens.size > 2) safeInt(tokens(2)) else 0
+          val right = if(tokens.size > 3) safeInt(tokens(3)) else 0
+          val bottom = if(tokens.size > 4) safeInt(tokens(4)) else 0
+          val text = if(tokens.size > 5) tokens(5) else ""
+          tokens(0) -> ImageMetadata(left, top, right, bottom, text)
         }
       }
       showImage(0)
@@ -133,6 +139,8 @@ object MainApp extends SimpleSwingApplication {
 
   def saveAction(): Unit = {
     if(imageList.nonEmpty){
+      println("Save")
+      metadataList.foreach(println)
       val csvFile = imageList(0).getParent + "/" + CSV_FILE_NAME
       val pw = new PrintWriter(new File(csvFile))
       pw.println("image,left,top,right,bottom,plate_text")
